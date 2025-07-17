@@ -30,8 +30,7 @@ Automatically reserve your preferred desk via the SeatSurfing API, either for a 
   "EMAIL": "your.email@domain.com",
   "PASSWORD": "your_password",
   "ORG_ID": "your-org-id-here",
-  "LOCATION_ID": "your-location-id-here",
-  "COOKIE": "rl_user_id=12345"
+  "LOCATION_ID": "your-location-id-here"
 }
 ````
 

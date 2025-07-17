@@ -30,11 +30,10 @@ def check_api_alive(base_url):
     print("❌ API seems unreachable.")
     return False
 
-def login(base_url, email, password, org_id, cookie):
+def login(base_url, email, password, org_id):
     headers = {
         "Accept": "*/*",
         "Content-Type": "application/json",
-        "Cookie": cookie,
         "Origin": base_url,
         "Referer": f"{base_url}/ui/login/",
         "User-Agent": "Mozilla/5.0"
@@ -53,11 +52,10 @@ def login(base_url, email, password, org_id, cookie):
     print("✅ Logged in! Access token:", access_token[:20], "…")
     return access_token
 
-def check_availability_and_get_id(base_url, location_id, desk_label, enter, leave, access_token, cookie):
+def check_availability_and_get_id(base_url, location_id, desk_label, enter, leave, access_token):
     headers = {
         "Accept": "*/*",
         "Content-Type": "application/json",
-        "Cookie": cookie,
         "authorization": f"Bearer {access_token}",
         "Origin": base_url,
         "Referer": f"{base_url}/ui/search/",
@@ -81,11 +79,10 @@ def check_availability_and_get_id(base_url, location_id, desk_label, enter, leav
     print(f"❌ '{desk_label}' is NOT available on {enter[:10]}")
     return None
 
-def make_reservation(base_url, desk_id, desk_label, enter, leave, access_token, cookie, subject="skibidooobi"):
+def make_reservation(base_url, desk_id, desk_label, enter, leave, access_token, subject="skibidooobi"):
     headers = {
         "Accept": "*/*",
         "Content-Type": "application/json",
-        "Cookie": cookie,
         "authorization": f"Bearer {access_token}",
         "Origin": base_url,
         "Referer": f"{base_url}/ui/search/",
@@ -144,12 +141,11 @@ def main():
     PASSWORD = config["PASSWORD"]
     ORG_ID = config["ORG_ID"]
     LOCATION_ID = config["LOCATION_ID"]
-    COOKIE = config["COOKIE"]
 
     if not check_api_alive(BASE_URL):
         sys.exit(1)
 
-    access_token = login(BASE_URL, EMAIL, PASSWORD, ORG_ID, COOKIE)
+    access_token = login(BASE_URL, EMAIL, PASSWORD, ORG_ID)
 
     if full_week:
         today = datetime.date.today()
@@ -158,10 +154,10 @@ def main():
         print(f"\n📅 Attempting to reserve '{desk_label}' for the full week...\n")
         for day in days:
             enter, leave = parse_time_range(time_range, day)
-            desk_id = check_availability_and_get_id(BASE_URL, LOCATION_ID, desk_label, enter, leave, access_token, COOKIE)
+            desk_id = check_availability_and_get_id(BASE_URL, LOCATION_ID, desk_label, enter, leave, access_token)
             if desk_id:
                 try:
-                    make_reservation(BASE_URL, desk_id, desk_label, enter, leave, access_token, COOKIE)
+                    make_reservation(BASE_URL, desk_id, desk_label, enter, leave, access_token)
                 except Exception as e:
                     print(f"❌ Booking failed on {day.isoformat()}: {e}")
             else:
@@ -169,9 +165,9 @@ def main():
     else:
         today = datetime.date.today()
         enter, leave = parse_time_range(time_range, today)
-        desk_id = check_availability_and_get_id(BASE_URL, LOCATION_ID, desk_label, enter, leave, access_token, COOKIE)
+        desk_id = check_availability_and_get_id(BASE_URL, LOCATION_ID, desk_label, enter, leave, access_token)
         if desk_id:
-            make_reservation(BASE_URL, desk_id, desk_label, enter, leave, access_token, COOKIE)
+            make_reservation(BASE_URL, desk_id, desk_label, enter, leave, access_token)
 
 if __name__ == "__main__":
     main()
