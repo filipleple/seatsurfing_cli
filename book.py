@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import json
 import requests
 import datetime
@@ -123,16 +125,43 @@ def get_weekdays(start_day, count=5):
         current += datetime.timedelta(days=1)
     return weekdays
 
+def parse_day_argument(day_str):
+    try:
+        parts = day_str.strip().split(".")
+        if len(parts) not in [2, 3]:
+            raise ValueError("Invalid number of components")
+
+        day = int(parts[0])
+        month = int(parts[1])
+        today = datetime.date.today()
+
+        if len(parts) == 3:
+            year = int(parts[2])
+        else:
+            year = today.year
+            try_date = datetime.date(year, month, day)
+            if try_date < today:
+                # If the date already passed this year, assume next year
+                year += 1
+
+        return datetime.date(year, month, day)
+
+    except ValueError:
+        print("❌ Invalid day format. Use DD.MM or DD.MM.YYYY (e.g., 01.01 or 01.01.2025)")
+        sys.exit(1)
+
 def main():
     parser = argparse.ArgumentParser(description="SeatSurfing auto-booking tool")
     parser.add_argument("desk_label", help="Label of the desk to reserve (e.g. 'Desk 7')")
     parser.add_argument("time_range", help="Time range (e.g. '16:00-18:00')")
     parser.add_argument("--week", action="store_true", help="Reserve the desk for the full week (Mon–Fri)")
+    parser.add_argument("--day", help="Specify the day (DD.MM or D.M) to reserve instead of today")
 
     args = parser.parse_args()
     desk_label = args.desk_label
     time_range = args.time_range
     full_week = args.week
+    override_day = parse_day_argument(args.day) if args.day else None
 
     config = load_config()
 
@@ -148,10 +177,10 @@ def main():
     access_token = login(BASE_URL, EMAIL, PASSWORD, ORG_ID)
 
     if full_week:
-        today = datetime.date.today()
-        days = get_weekdays(today)
+        start_day = override_day or datetime.date.today()
+        days = get_weekdays(start_day)
 
-        print(f"\n📅 Attempting to reserve '{desk_label}' for the full week...\n")
+        print(f"\n📅 Attempting to reserve '{desk_label}' for the full week starting {start_day.isoformat()}...\n")
         for day in days:
             enter, leave = parse_time_range(time_range, day)
             desk_id = check_availability_and_get_id(BASE_URL, LOCATION_ID, desk_label, enter, leave, access_token)
@@ -163,8 +192,8 @@ def main():
             else:
                 print(f"⚠️ Skipping {day.isoformat()} — desk not available.\n")
     else:
-        today = datetime.date.today()
-        enter, leave = parse_time_range(time_range, today)
+        day = override_day or datetime.date.today()
+        enter, leave = parse_time_range(time_range, day)
         desk_id = check_availability_and_get_id(BASE_URL, LOCATION_ID, desk_label, enter, leave, access_token)
         if desk_id:
             make_reservation(BASE_URL, desk_id, desk_label, enter, leave, access_token)
