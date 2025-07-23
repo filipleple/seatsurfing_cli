@@ -37,10 +37,24 @@ Automatically reserve your preferred desk via the SeatSurfing API, either for a 
 
 ## 🧑‍💻 Usage
 
+### List your current reservations
+
+```bash
+./seatsurf.py list_reservations
+```
+
+Example output:
+
+```
+📋 Your Reservations:
+• Desk 7: 2025-07-23T08:00:00+02:00 → 2025-07-23T18:00:00+02:00
+• Desk 7: 2025-07-24T08:00:00+02:00 → 2025-07-24T18:00:00+02:00
+```
+
 ### Basic: Book a desk today
 
 ```bash
-python seatsurf.py book "Desk 7" "16:00-18:00"
+./seatsurf.py book "Desk 7" "16:00-18:00"
 ```
 
 This will:
@@ -51,7 +65,7 @@ This will:
 ### Book a desk for a specific day
 
 ```bash
-python seatsurf.py book "Desk 7" "16:00-18:00" --day 18.07
+./seatsurf.py book "Desk 7" "16:00-18:00" --day 18.07
 ```
 
 This will:
@@ -68,7 +82,7 @@ If the year is **not specified**:
 ### Full Week Booking (Mon–Fri)
 
 ```bash
-python seatsurf.py book "Desk 7" "16:00-18:00" --week
+./seatsurf.py book "Desk 7" "16:00-18:00" --week
 ```
 
 This will:
@@ -79,7 +93,7 @@ This will:
 ### Full Week Booking starting from a specific day
 
 ```bash
-python seatsurf.py book "Desk 7" "16:00-18:00" --week --day 18.07
+./seatsurf.py book "Desk 7" "16:00-18:00" --week --day 18.07
 ```
 
 This will:
