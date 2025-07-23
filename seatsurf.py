@@ -51,7 +51,7 @@ def login(base_url, email, password, org_id):
     resp = requests.post(f"{base_url}/auth/login", headers=headers, json=payload)
     resp.raise_for_status()
     data = resp.json()
-    print(data)
+    # print(data)
     access_token = data["accessToken"]
 
     print("✅ Logged in! Access token:", access_token[:20], "…")
