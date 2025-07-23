@@ -25,11 +25,11 @@ Automatically reserve your preferred desk via the SeatSurfing API, either for a 
 
 ```json
 {
-  "BASE_URL": "http://your.seatsurfing.app",
+  "BASE_URL": "http://desk.3mdeb.com",
   "EMAIL": "your.email@domain.com",
   "PASSWORD": "your_password",
-  "ORG_ID": "your-org-id-here",
-  "LOCATION_ID": "your-location-id-here"
+  "ORG_ID": "152c94b5-3bc2-4639-a431-f9e082ce7d71",
+  "LOCATION_ID": "5a9c956b-83fe-4d4a-86bb-7144f5ac3c7a"
 }
 ```
 
