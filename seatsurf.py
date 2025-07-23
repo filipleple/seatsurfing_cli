@@ -50,7 +50,10 @@ def login(base_url, email, password, org_id):
 
     resp = requests.post(f"{base_url}/auth/login", headers=headers, json=payload)
     resp.raise_for_status()
-    access_token = resp.json()["accessToken"]
+    data = resp.json()
+    print(data)
+    access_token = data["accessToken"]
+
     print("✅ Logged in! Access token:", access_token[:20], "…")
     return access_token
 
@@ -105,6 +108,29 @@ def make_reservation(base_url, desk_id, desk_label, enter, leave, access_token, 
     resp.raise_for_status()
     print(f"✅ Successfully booked '{desk_label}' on {enter[:10]} from {enter[-13:-8]} to {leave[-13:-8]}.")
 
+def list_reservations(base_url, access_token):
+    headers = {
+        "Accept": "*/*",
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {access_token}"
+    }
+
+    url = f"{base_url}/booking/"
+    resp = requests.get(url, headers=headers)
+    resp.raise_for_status()
+    bookings = resp.json()
+
+    if not bookings:
+        print("📭 No current reservations found.")
+        return
+
+    print("📋 Your Reservations:")
+    for b in bookings:
+        enter = b["enter"]
+        leave = b["leave"]
+        space_name = b.get("space", {}).get("name", "Unknown")
+        print(f"• {space_name}: {enter} → {leave}")
+
 def parse_time_range(time_str, day):
     try:
         start_str, end_str = time_str.split("-")
@@ -116,11 +142,10 @@ def parse_time_range(time_str, day):
         sys.exit(1)
 
 def get_weekdays(start_day, count=5):
-    """Get next `count` weekdays starting from `start_day`"""
     weekdays = []
     current = start_day
     while len(weekdays) < count:
-        if current.weekday() < 5:  # Monday=0, Sunday=6
+        if current.weekday() < 5:
             weekdays.append(current)
         current += datetime.timedelta(days=1)
     return weekdays
@@ -141,7 +166,6 @@ def parse_day_argument(day_str):
             year = today.year
             try_date = datetime.date(year, month, day)
             if try_date < today:
-                # If the date already passed this year, assume next year
                 year += 1
 
         return datetime.date(year, month, day)
@@ -150,21 +174,7 @@ def parse_day_argument(day_str):
         print("❌ Invalid day format. Use DD.MM or DD.MM.YYYY (e.g., 01.01 or 01.01.2025)")
         sys.exit(1)
 
-def main():
-    parser = argparse.ArgumentParser(description="SeatSurfing auto-booking tool")
-    parser.add_argument("desk_label", help="Label of the desk to reserve (e.g. 'Desk 7')")
-    parser.add_argument("time_range", help="Time range (e.g. '16:00-18:00')")
-    parser.add_argument("--week", action="store_true", help="Reserve the desk for the full week (Mon–Fri)")
-    parser.add_argument("--day", help="Specify the day (DD.MM or D.M) to reserve instead of today")
-
-    args = parser.parse_args()
-    desk_label = args.desk_label
-    time_range = args.time_range
-    full_week = args.week
-    override_day = parse_day_argument(args.day) if args.day else None
-
-    config = load_config()
-
+def handle_book_command(args, config):
     BASE_URL = config["BASE_URL"]
     EMAIL = config["EMAIL"]
     PASSWORD = config["PASSWORD"]
@@ -176,10 +186,13 @@ def main():
 
     access_token = login(BASE_URL, EMAIL, PASSWORD, ORG_ID)
 
-    if full_week:
+    desk_label = args.desk_label
+    time_range = args.time_range
+    override_day = parse_day_argument(args.day) if args.day else None
+
+    if args.week:
         start_day = override_day or datetime.date.today()
         days = get_weekdays(start_day)
-
         print(f"\n📅 Attempting to reserve '{desk_label}' for the full week starting {start_day.isoformat()}...\n")
         for day in days:
             enter, leave = parse_time_range(time_range, day)
@@ -197,6 +210,38 @@ def main():
         desk_id = check_availability_and_get_id(BASE_URL, LOCATION_ID, desk_label, enter, leave, access_token)
         if desk_id:
             make_reservation(BASE_URL, desk_id, desk_label, enter, leave, access_token)
+
+def handle_list_command(config):
+    BASE_URL = config["BASE_URL"]
+    EMAIL = config["EMAIL"]
+    PASSWORD = config["PASSWORD"]
+    ORG_ID = config["ORG_ID"]
+
+    if not check_api_alive(BASE_URL):
+        sys.exit(1)
+
+    access_token = login(BASE_URL, EMAIL, PASSWORD, ORG_ID)
+    list_reservations(BASE_URL, access_token)
+
+def main():
+    parser = argparse.ArgumentParser(description="SeatSurfing CLI")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    book_parser = subparsers.add_parser("book", help="Book a desk")
+    book_parser.add_argument("desk_label", help="Label of the desk to reserve (e.g. 'Desk 7')")
+    book_parser.add_argument("time_range", help="Time range (e.g. '16:00-18:00')")
+    book_parser.add_argument("--week", action="store_true", help="Reserve the desk for the full week (Mon–Fri)")
+    book_parser.add_argument("--day", help="Specify the day (DD.MM or DD.MM.YYYY) to reserve instead of today")
+
+    list_reservations_parser = subparsers.add_parser("list_reservations", help="List your current reservations")
+
+    args = parser.parse_args()
+    config = load_config()
+
+    if args.command == "book":
+        handle_book_command(args, config)
+    elif args.command == "list_reservations":
+        handle_list_command(config)
 
 if __name__ == "__main__":
     main()
