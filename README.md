@@ -40,7 +40,7 @@ Automatically reserve your preferred desk via the SeatSurfing API, either for a 
 ### Basic: Book a desk today
 
 ```bash
-python seatsurf.py "Desk 7" "16:00-18:00"
+python seatsurf.py book "Desk 7" "16:00-18:00"
 ```
 
 This will:
@@ -51,7 +51,7 @@ This will:
 ### Book a desk for a specific day
 
 ```bash
-python seatsurf.py "Desk 7" "16:00-18:00" --day 18.07
+python seatsurf.py book "Desk 7" "16:00-18:00" --day 18.07
 ```
 
 This will:
@@ -68,7 +68,7 @@ If the year is **not specified**:
 ### Full Week Booking (Mon–Fri)
 
 ```bash
-python seatsurf.py "Desk 7" "16:00-18:00" --week
+python seatsurf.py book "Desk 7" "16:00-18:00" --week
 ```
 
 This will:
@@ -79,7 +79,7 @@ This will:
 ### Full Week Booking starting from a specific day
 
 ```bash
-python seatsurf.py "Desk 7" "16:00-18:00" --week --day 18.07
+python seatsurf.py book "Desk 7" "16:00-18:00" --week --day 18.07
 ```
 
 This will:
